@@ -1,4 +1,4 @@
---project test file
+--files that I copied over in order to test
 type Point = (Int, Int)
 type Slide = (Point,Point)
 type Grid = [Point]
@@ -12,15 +12,19 @@ generateGrid n1 n2 n3 acc
         where
             row = map (\ x -> (x,n3)) [0 .. (n1 - 1)]
             nn1 = if n2 > 0 then n1 + 1 else n1 - 1
+--end of files that I copied over
 
--- goal is to have [Slide] as output
---Currently outputs [[Slide]]
 
+--creates a list of possible slides from every position on the board
+
+--To Test, call:
+--generateSlides grid0 sizeGrid
+--ie generateSlides grid0 3 
 generateSlides :: Grid -> Int -> [Slide]
 generateSlides b n = concat [genSlidesHelper b pt (genPointsHelper pt n) | pt <- b ]
 
 
---this currently generates a list of all possible moves for a given point
+--generates a list of all valid moves from a given point
 genPointsHelper :: Point -> Int -> [Point]
 genPointsHelper pt n
     | ((snd pt) < n-1)     = ((fst pt)+1,(snd pt)) : ((fst pt)-1,(snd pt)) :
