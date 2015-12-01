@@ -11,11 +11,11 @@ boardSeen current_board (b:boards)
 
 
 countPieces :: Board -> Int -> Int -> Int
-countPieces (b:board) whitecount blackcount n
+countPieces board whitecount blackcount n
     | board == [] = if (whitecount < n) then true
                     else if (blackcount < n) then true
                     else false
-    | b == "D" = countPieces board whitecount blackcount n
-    | b == "W" = countPieces board (whitecount + 1) blackcount n
-    | b == "B" = countPieces board whitecount (blackcount + 1) n
+    | (head board) == "D" = countPieces (tail board) whitecount blackcount n
+    | (head board) == "W" = countPieces (tail board) (whitecount + 1) blackcount n
+    | (head board) == "B" = countPieces (tail board) whitecount (blackcount + 1) n
  
