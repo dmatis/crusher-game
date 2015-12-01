@@ -342,21 +342,34 @@ genSlidesHelper b oldPt points = [(oldPt, newPt) | newPt <- points, newPt `elem`
 --Jump = (Point,Point,Point)
 
 generateLeaps :: Grid -> Int -> [Jump]
-generateLeaps b n = concat [genLeapsHelper b (genJumpsHelper pt n) | pt <- b ]
+generateLeaps b n = concat [genLeapsHelper b (genPointsHelper pt n) | pt <- b ]
 
---generates a list of all valid slides from a given point
-genJumpsHelper :: Point -> Int -> [Jump]
-genJumpsHelper pt n = (pt, ((fst pt)-1,(snd pt)-1), ((fst pt)-2,(snd pt)-2)) :
-                      (pt, ((fst pt),(snd pt)-1), ((fst pt),(snd pt)-2)) :
-                      (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) :
-                      (pt, ((fst pt)-1,(snd pt)), ((fst pt)-2,(snd pt))) :
-                      (pt, ((fst pt)-1,(snd pt)+1), ((fst pt)-2,(snd pt)+2)) :
-                      (pt, ((fst pt),(snd pt)+1), ((fst pt),(snd pt)+2)) : []
+--generates a list of all valid moves from a given point
+genPointsHelper :: Point -> Int -> [Jump]
+genPointsHelper pt n
+    | ((snd pt) < n-1)     = (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) : 
+                             (pt, ((fst pt)-1,(snd pt)), ((fst pt)-2,(snd pt))) :
+                             (pt, ((fst pt), (snd pt) + 1), ((fst pt)-1, (snd pt) + 2)) : 
+                             (pt, ((fst pt),(snd pt)-1) , ((fst pt),(snd pt)-2)) :
+                             (pt, ((fst pt)-1,(snd pt)-1), ((fst pt)-2,(snd pt)-2)) : 
+                             (pt, ((fst pt)+1,(snd pt)+1), ((fst pt)+1,(snd pt)+2)) : []
 
---filters out the invalid jump points
+    | ((snd pt) == n-1)    = (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) : 
+                             (pt, ((fst pt)-1,(snd pt)), ((fst pt)-2,(snd pt))) :
+                             (pt, ((fst pt), (snd pt) + 1), ((fst pt), (snd pt) + 2)) : 
+                             (pt, ((fst pt),(snd pt)-1), ((fst pt),(snd pt)-2)) : 
+                             (pt, ((fst pt)-1,(snd pt)-1), ((fst pt)-2,(snd pt)-2)) : 
+                             (pt, ((fst pt)-1,(snd pt)+1), ((fst pt)-2,(snd pt)+2)) : []
+                             
+    | otherwise            = (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) : 
+                             (pt, ((fst pt)-1,(snd pt)), ((fst pt)-2,(snd pt))) :
+                             (pt, ((fst pt), (snd pt) + 1), ((fst pt), (snd pt) + 2)) : 
+                             (pt, ((fst pt),(snd pt)-1), ((fst pt)-1,(snd pt)-2)) :
+                             (pt, ((fst pt)+1,(snd pt)-1), ((fst pt)+1,(snd pt)-2)) : 
+                             (pt, ((fst pt)-1,(snd pt)+1), ((fst pt)-2,(snd pt)+2)) : []
+
 genLeapsHelper :: Grid -> [Jump] -> [Jump]
-genLeapsHelper b jumps = [((fstPt j), (sndPt j), (thdPt j)) | j <- jumps, (sndPt j) `elem` b, (thdPt j) `elem` b]
-
+genLeapsHelper b jumps = [((fstPt jump),(sndPt jump), (thdPt jump)) | jump <- jumps, (sndPt jump) `elem` b, (thdPt jump) `elem` b]
 
 --get first point in the jump
 fstPt :: Jump -> Point
