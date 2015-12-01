@@ -134,6 +134,17 @@ type Jump = (Point,Point,Point)
 
 type Move = (Point,Point)
 
+
+-- A simple function in order to "play" the game
+
+play :: [String] -> Char -> Int -> Int -> IO ()
+play history@(current:old) player depth n
+  | gameOver (sTrToBoard current) (map sTrToBoard old) n = putStrLn "Game over."
+  | otherwise = do 
+       let history'@(new:_) = crusher history player depth n
+       putStrLn $ player:" played: " ++ new
+       play history' (if player == 'W' then 'B' else 'W') depth n
+
 --
 -- Some test results to see what functions are producing 
 --
@@ -282,8 +293,30 @@ generateGrid n1 n2 n3 acc
 -- Returns: the list of all Slides possible on the given grid
 --
 
+--To Test, call:
+--generateSlides grid0 sizeGrid
+--ie generateSlides grid0 3 
 generateSlides :: Grid -> Int -> [Slide]
-generateSlides b n = -- To Be Completed 
+generateSlides b n = concat [genSlidesHelper b pt (genPointsHelper pt n) | pt <- b ]
+
+--generates a list of all valid slides from a given point
+genPointsHelper :: Point -> Int -> [Point]
+genPointsHelper pt n
+    | ((snd pt) < n-1)     = ((fst pt)+1,(snd pt)) : ((fst pt)-1,(snd pt)) :
+                             ((fst pt), (snd pt) + 1) : ((fst pt),(snd pt)-1) :
+                             ((fst pt)-1,(snd pt)-1) : ((fst pt)+1,(snd pt)+1) : []
+
+    | ((snd pt) == n-1)    = ((fst pt)+1,(snd pt)) : ((fst pt)-1,(snd pt)) :
+                             ((fst pt), (snd pt) + 1) : ((fst pt),(snd pt)-1) : 
+                             ((fst pt)-1,(snd pt)-1) : ((fst pt)-1,(snd pt)+1) : []
+                             
+    | otherwise            = ((fst pt)+1,(snd pt)) : ((fst pt)-1,(snd pt)) :
+                             ((fst pt), (snd pt) + 1) : ((fst pt),(snd pt)-1) :
+                             ((fst pt)+1,(snd pt)-1) : ((fst pt)-1,(snd pt)+1) : []
+
+--generates a list of slides from a given starting point (oldPt)
+genSlidesHelper :: Grid -> Point -> [Point] -> [Slide]
+genSlidesHelper b oldPt points = [(oldPt, newPt) | newPt <- points, newPt `elem` b]
 
 --
 -- generateLeaps
@@ -430,6 +463,7 @@ moveGenerator state slides jumps player = -- To Be Completed
 -- Returns: the goodness value of the provided board
 --
 
+-- Goodness value determined by: 
 boardEvaluator :: Piece -> [Board] -> Int -> Board -> Bool -> Int
 boardEvaluator player history n board myTurn = -- To Be Completed
 
