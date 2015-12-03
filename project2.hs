@@ -545,8 +545,17 @@ blankTile state point =  True `elem` [True | tile <- state, (snd tile) == point,
 --
 
 -- Goodness value determined by: 
-boardEvaluator :: Piece -> [Board] -> Int -> Board -> Bool -> Int
-boardEvaluator player history n board myTurn = -- To Be Completed
+boardEvaluator :: Piece -> Board -> Int
+boardEvaluator player board = countPlayerPieces player board 0
+  
+  
+countPlayerPieces :: Piece -> Board -> Int -> Int
+countPlayerPieces player board counter 
+  | (null board)             = counter     
+  | (head board) == player = countPieces player (tail board) (counter + 1)
+  | otherwise              = countPieces player (tail board) counter
+
+
 
 --
 -- minimax
