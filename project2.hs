@@ -156,6 +156,7 @@ board0 = sTrToBoard "WWW-WW-------BB-BBB"
 newBoards0 = generateNewStates board0 [] grid0 slides0 jumps0 W
 tree0 = generateTree board0 [] grid0 slides0 jumps0 W 4 3
 heuristic0 = boardEvaluator W [] 3
+state0 = getState board0 grid0
 
 --
 -- crusher
@@ -319,8 +320,8 @@ generateSlides :: Grid -> Int -> [Slide]
 generateSlides b n = concat [genSlidesHelper b pt (genPointsHelper pt n) | pt <- b ]
 
 --generates a list of all valid slides from a given point
-genPointsHelper :: Point -> Int -> [Point]
-genPointsHelper pt n
+genSlidePointsHelper :: Point -> Int -> [Point]
+genSlidePointsHelper pt n
     | ((snd pt) < n-1)     = ((fst pt)+1,(snd pt)) : ((fst pt)-1,(snd pt)) :
                              ((fst pt), (snd pt) + 1) : ((fst pt),(snd pt)-1) :
                              ((fst pt)-1,(snd pt)-1) : ((fst pt)+1,(snd pt)+1) : []
@@ -368,10 +369,10 @@ genPointsHelper :: Point -> Int -> [Jump]
 genPointsHelper pt n
     | ((snd pt) < n-1)     = (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) : 
                              (pt, ((fst pt)-1,(snd pt)), ((fst pt)-2,(snd pt))) :
-                             (pt, ((fst pt), (snd pt) + 1), ((fst pt)-1, (snd pt) + 2)) : 
+                             (pt, ((fst pt), (snd pt) + 1), ((fst pt), (snd pt) + 2)) : 
                              (pt, ((fst pt),(snd pt)-1) , ((fst pt),(snd pt)-2)) :
                              (pt, ((fst pt)-1,(snd pt)-1), ((fst pt)-2,(snd pt)-2)) : 
-                             (pt, ((fst pt)+1,(snd pt)+1), ((fst pt)+1,(snd pt)+2)) : []
+                             (pt, ((fst pt)+1,(snd pt)+1), ((fst pt)+2,(snd pt)+2)) : []
 
     | ((snd pt) == n-1)    = (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) : 
                              (pt, ((fst pt)-1,(snd pt)), ((fst pt)-2,(snd pt))) :
@@ -478,7 +479,32 @@ generateTree board history grid slides jumps player depth n =
 --
 
 generateNewStates :: Board -> [Board] -> Grid -> [Slide] -> [Jump] -> Piece -> [Board]
-generateNewStates board history grid slides jumps player = -- To Be Completed
+generateNewStates board history grid slides jumps player =
+    filterBoards (createBoards state moves player) history
+    where
+        state = (getState board grid)
+        moves = (moveGenerator state slides jumps player)
+
+
+createBoards :: State -> [Move] -> Piece -> [Board]
+createBoards state moves p = [updateBoard origin dest point piece p | m@(origin, dest) <- moves, s@(piece,point) <- state, ]
+
+updateBoard :: Piece -> Point -> Piece
+updateBoard origin dest point piece p 
+    | (origin == point)  = D
+    | (dest == point)    = p
+    | otherwise          = piece
+
+--filters out the boards that have already occurred
+filterBoards :: [Board] -> [Board] -> [Board]
+filterBoards boards history = [b | b <- boards, (not b `elem` history)]
+
+
+-- Zips together piece and point to create State
+getState :: Board -> Grid -> State
+getState xs     []     = []
+getState []     ys     = []
+getState (x:xs) (y:ys) = (x, y) : getState xs ys
 
 --
 -- moveGenerator
@@ -506,24 +532,34 @@ generateNewStates board history grid slides jumps player = -- To Be Completed
 --
 -- Returns: the list of all valid moves that the player could make
 --
-
 moveGenerator :: State -> [Slide] -> [Jump] -> Piece -> [Move]
 moveGenerator state slides jumps player
-    | player == W                       = getMoves state slides jumps [(snd tile) | tile <- state, (fst tile) == W]	
+    | player == D                       = []
+    | otherwise                         = getMoves player state slides jumps [(snd tile) | tile <- state, (fst tile) == player]
 
+--Generates a list of valid moves from a given state for Player Piece
+getMoves :: Piece -> State -> [Slide] -> [Jump] -> [Point] -> [Move]
+getMoves p state slides jumps points = (getSlides state slides points) ++ (getJumps p state jumps points)
 
-getMoves :: State -> [Slide] -> [Jump] -> [Point] -> [Move]
-getMoves state slides jumps points = (getSlides state slides points) ++ (getJumps state jumps points)
-
+--Generates all valid slides on the board (the tile being moved to is empty)
 getSlides :: State -> [Slide] -> [Point] -> [Move]
-getSlides state slides points = [sl | pt <- points, sl <- slides, pt == (fst sl), (blankTile state (snd s1))]
+getSlides state slides points = [sl | pt <- points, sl@(x,y) <- slides, pt == x, (blankTile state y)]
 
-getSlides :: State -> [Slide] -> [Point] -> [Move]
-getSlides state slides points = [sl | pt <- points, sl@(x,y) <- slides, pt == (fst sl), (blankTile state (snd sl))] -- filter isBlank list
- 
+--Generates all valid jumps on the board (where it matches the piece color being jumped over and lands on a blank OR opponent piece)
+getJumps :: Piece -> State -> [Jump] -> [Point] -> [Move]
+getJumps p state jumps points = [(x,z) | pt <- points, j@(x,y,z) <- jumps, pt == x, (matchesPiece p state y), (notPlayerTile p state z)]
+
+--Returns true if a given point does not contain a player's piece
+notPlayerTile :: Piece -> State -> Point -> Bool
+notPlayerTile p state point = True `elem` [True | tile <- state, (snd tile) == point, (fst tile) /= p ]
+
+ --Returns true if empty tile at a given point
 blankTile :: State -> Point -> Bool 
-blankTile state point =  True `elem` [True | tile <- state, (snd tile) == point, (fst tile) == D) ]
+blankTile state point =  True `elem` [True | tile <- state, (snd tile) == point, (fst tile) == D ]
 
+--Returns true if the given piece (that we will jump over) is the same color as Player Piece
+matchesPiece :: Piece -> State -> Point -> Bool
+matchesPiece p state point = True `elem` [True | tile <- state, (snd tile) == point, (fst tile) == p ]
 
 --
 -- boardEvaluator
