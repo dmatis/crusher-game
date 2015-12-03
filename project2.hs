@@ -402,7 +402,6 @@ sndPt (_,j,_) = j
 thdPt :: Jump -> Point
 thdPt (_,_,j) = j
 
-
 --
 -- stateSearch
 --
@@ -519,8 +518,13 @@ getMoves state slides jumps points = (getSlides state slides points) ++ (getJump
 getSlides :: State -> [Slide] -> [Point] -> [Move]
 getSlides state slides points = [sl | pt <- points, sl <- slides, pt == (fst sl), (blankTile state (snd s1))]
 
-blankTile :: State -> Point -> Bool
-blankTile state point = [if ((snd tile) == point, (fst tile) == D) then True else False | tile <- state]
+getSlides :: State -> [Slide] -> [Point] -> [Move]
+getSlides state slides points = [sl | pt <- points, sl@(x,y) <- slides, pt == (fst sl), (blankTile state (snd sl))] -- filter isBlank list
+ 
+blankTile :: State -> Point -> Bool 
+blankTile state point =  True `elem` [True | tile <- state, (snd tile) == point, (fst tile) == D) ]
+
+
 --
 -- boardEvaluator
 --
