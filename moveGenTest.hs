@@ -64,6 +64,13 @@ genPointsHelper pt n
                              (pt, ((fst pt),(snd pt)-1), ((fst pt),(snd pt)-2)) : 
                              (pt, ((fst pt)-1,(snd pt)-1), ((fst pt)-2,(snd pt)-2)) : 
                              (pt, ((fst pt)-1,(snd pt)+1), ((fst pt)-2,(snd pt)+2)) : []
+
+    | ((snd pt) == n)      = (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) : 
+                             (pt, ((fst pt)-1,(snd pt)), ((fst pt)-2,(snd pt))) :
+                             (pt, ((fst pt), (snd pt)-1), ((fst pt)-1, (snd pt)-2)) : 
+                             (pt, ((fst pt),(snd pt)+1) , ((fst pt),(snd pt)+2)) :
+                             (pt, ((fst pt)+1,(snd pt)-1), ((fst pt)+1,(snd pt)-2)) : 
+                             (pt, ((fst pt)-1,(snd pt)+1), ((fst pt)-2,(snd pt)+2)) : []
                              
     | otherwise            = (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) : 
                              (pt, ((fst pt)-1,(snd pt)), ((fst pt)-2,(snd pt))) :

@@ -368,12 +368,20 @@ generateLeaps b n = concat [genLeapsHelper b (genPointsHelper pt n) | pt <- b ]
 --generates a list of all valid moves from a given point
 genPointsHelper :: Point -> Int -> [Jump]
 genPointsHelper pt n
-    | ((snd pt) < n-1)     = (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) : 
+
+    | ((snd pt) == n-2)    = (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) : 
                              (pt, ((fst pt)-1,(snd pt)), ((fst pt)-2,(snd pt))) :
                              (pt, ((fst pt), (snd pt) + 1), ((fst pt)-1, (snd pt) + 2)) : 
                              (pt, ((fst pt),(snd pt)-1) , ((fst pt),(snd pt)-2)) :
                              (pt, ((fst pt)-1,(snd pt)-1), ((fst pt)-2,(snd pt)-2)) : 
                              (pt, ((fst pt)+1,(snd pt)+1), ((fst pt)+1,(snd pt)+2)) : []
+
+    | ((snd pt) < n-2)     = (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) : 
+                             (pt, ((fst pt)-1,(snd pt)), ((fst pt)-2,(snd pt))) :
+                             (pt, ((fst pt), (snd pt) + 1), ((fst pt), (snd pt) + 2)) : 
+                             (pt, ((fst pt),(snd pt)-1) , ((fst pt),(snd pt)-2)) :
+                             (pt, ((fst pt)-1,(snd pt)-1), ((fst pt)-2,(snd pt)-2)) : 
+                             (pt, ((fst pt)+1,(snd pt)+1), ((fst pt)+2,(snd pt)+2)) : []
 
     | ((snd pt) == n-1)    = (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) : 
                              (pt, ((fst pt)-1,(snd pt)), ((fst pt)-2,(snd pt))) :
@@ -381,12 +389,19 @@ genPointsHelper pt n
                              (pt, ((fst pt),(snd pt)-1), ((fst pt),(snd pt)-2)) : 
                              (pt, ((fst pt)-1,(snd pt)-1), ((fst pt)-2,(snd pt)-2)) : 
                              (pt, ((fst pt)-1,(snd pt)+1), ((fst pt)-2,(snd pt)+2)) : []
+
+    | ((snd pt) == n)      = (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) : 
+                             (pt, ((fst pt)-1,(snd pt)), ((fst pt)-2,(snd pt))) :
+                             (pt, ((fst pt), (snd pt)-1), ((fst pt)-1, (snd pt)-2)) : 
+                             (pt, ((fst pt),(snd pt)+1) , ((fst pt),(snd pt)+2)) :
+                             (pt, ((fst pt)+1,(snd pt)-1), ((fst pt)+1,(snd pt)-2)) : 
+                             (pt, ((fst pt)-1,(snd pt)+1), ((fst pt)-2,(snd pt)+2)) : []
                              
     | otherwise            = (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) : 
                              (pt, ((fst pt)-1,(snd pt)), ((fst pt)-2,(snd pt))) :
                              (pt, ((fst pt), (snd pt) + 1), ((fst pt), (snd pt) + 2)) : 
-                             (pt, ((fst pt),(snd pt)-1), ((fst pt)-1,(snd pt)-2)) :
-                             (pt, ((fst pt)+1,(snd pt)-1), ((fst pt)+1,(snd pt)-2)) : 
+                             (pt, ((fst pt),(snd pt)-1), ((fst pt),(snd pt)-2)) :
+                             (pt, ((fst pt)+1,(snd pt)-1), ((fst pt)+2,(snd pt)-2)) : 
                              (pt, ((fst pt)-1,(snd pt)+1), ((fst pt)-2,(snd pt)+2)) : []
 
 genLeapsHelper :: Grid -> [Jump] -> [Jump]
