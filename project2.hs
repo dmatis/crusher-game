@@ -150,6 +150,7 @@ play history@(current:old) player depth n
 --
 run = crusher ["W------------BB-BBB","----W--------BB-BBB","-W-----------BB-BBB"] 'W' 2 3
 grid0 = generateGrid 3 2 4 []
+grid4 = generateGrid 4 2 4 []
 slides0 = generateSlides grid0 3
 jumps0 = generateLeaps grid0 3
 board0 = sTrToBoard "WWW-WW-------BB-BBB"
@@ -369,10 +370,10 @@ genPointsHelper :: Point -> Int -> [Jump]
 genPointsHelper pt n
     | ((snd pt) < n-1)     = (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) : 
                              (pt, ((fst pt)-1,(snd pt)), ((fst pt)-2,(snd pt))) :
-                             (pt, ((fst pt), (snd pt) + 1), ((fst pt), (snd pt) + 2)) : 
+                             (pt, ((fst pt), (snd pt) + 1), ((fst pt)-1, (snd pt) + 2)) : 
                              (pt, ((fst pt),(snd pt)-1) , ((fst pt),(snd pt)-2)) :
                              (pt, ((fst pt)-1,(snd pt)-1), ((fst pt)-2,(snd pt)-2)) : 
-                             (pt, ((fst pt)+1,(snd pt)+1), ((fst pt)+2,(snd pt)+2)) : []
+                             (pt, ((fst pt)+1,(snd pt)+1), ((fst pt)+1,(snd pt)+2)) : []
 
     | ((snd pt) == n-1)    = (pt, ((fst pt)+1,(snd pt)), ((fst pt)+2,(snd pt))) : 
                              (pt, ((fst pt)-1,(snd pt)), ((fst pt)-2,(snd pt))) :
