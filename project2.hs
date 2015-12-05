@@ -484,10 +484,15 @@ stateSearch board history grid slides jumps player depth num
 --
 
 generateTree :: Board -> [Board] -> Grid -> [Slide] -> [Jump] -> Piece -> Int -> Int -> BoardTree
-generateTree board history grid slides jumps player depth n
-    | (depth == 1)                       = (Node depth board [])
-    | (gameOver board history n)         = (Node depth board [])
-    | otherwise                          = (Node depth board [generateTree b (board:history) grid slides jumps nextPlayer (depth-1) n |b <- childBoards])
+generateTree board history grid slides jumps player depth n = genTreeHelper board history grid slides jumps player depth n 0
+
+--generateTree helper function to add additional height argument
+genTreeHelper :: Board -> [Board] -> Grid -> [Slide] -> [Jump] -> Piece -> Int -> Int -> Int -> BoardTree
+genTreeHelper board history grid slides jumps player depth n height
+
+    | (depth == height)                  = (Node height board [])
+    | (gameOver board history n)         = (Node height board [])
+    | otherwise                          = (Node height board [genTreeHelper b (board:history) grid slides jumps nextPlayer depth n (height+1) |b <- childBoards])
         where
             childBoards = (generateNewStates board history grid slides jumps player)
             nextPlayer = if player == W then B else W
