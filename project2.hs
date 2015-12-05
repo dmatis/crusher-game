@@ -203,7 +203,12 @@ crusher (current:old) player d size =
 --
 -- Returns: True if the board is in a state where the game has ended, otherwise False
 --
-
+convertCharToPiece :: Char -> Piece
+convertCharToPiece player
+  | player == 'W' = W
+  | player == 'B' = B
+  | otherwise = D
+  
 gameOver :: Board -> [Board] -> Int -> Bool
 gameOver board history n = boardSeen board history
                           || countPieces board 0 0 n
@@ -225,11 +230,7 @@ countPieces board whitecount blackcount n
     | (head board) == "W" = countPieces (tail board) (whitecount + 1) blackcount n -- if the piece is "W", recursively call countPieces with the rest of the board and increment the count of white pieces
     | (head board) == "B" = countPieces (tail board) whitecount (blackcount + 1) n -- if the piece is "B", recursively call countPieces with the rest of the board and increment the count of black pieces
  
-convertCharToPiece :: Char -> Piece
-convertCharToPiece player
-  | player == 'W' = W
-  | player == 'B' = B
-  | otherwise = D
+
 --
 -- sTrToBoard
 --
