@@ -178,7 +178,15 @@ state0 = getState board0 grid0
 --
 
 crusher :: [String] -> Char -> Int -> Int -> [String]
-crusher (current:old) p d n = -- To Be Completed
+crusher (current:old) player d size =
+    let optimalBoard = (stateSearch board history grid slides leaps) (convertCharToPiece d) size
+    in ((boardToStr optimalBoard):(current:old))
+        where
+            grid = generateGrid size (size - 1) (2 * (size - 1)) []
+            slides = generateSlides grid size
+            leaps = generateLeaps grid size
+            board = sTrToBoard current
+            history = map sTrToBoard old
 
 --
 -- gameOver
@@ -195,27 +203,32 @@ crusher (current:old) p d n = -- To Be Completed
 --
 -- Returns: True if the board is in a state where the game has ended, otherwise False
 --
+convertCharToPiece :: Char -> Piece
+convertCharToPiece player
+  | player == 'W' = W
+  | player == 'B' = B
+  | otherwise = D
 
 gameOver :: Board -> [Board] -> Int -> Bool
 gameOver board history n = boardSeen board history
-                          || countPieces board 0 0 n
+                          || countBoardPieces board 0 0 n
 
 
 boardSeen :: Board -> [Board] -> Bool
 boardSeen current_board boards 
-    | boards == [] = false  -- if the board is empty return false
-    | current_board == (head boards) = true  --  if the current board is in list of boards return true
+    | boards == [] = False  -- if the board is empty return false
+    | current_board == (head boards) = True  --  if the current board is in list of boards return true
     | otherwise = boardSeen (current_board) (tail boards) -- else recursively call boardSeen with the rest of the history and the current board
 
 
-countPieces :: Board -> Int -> Int -> Int
-countPieces board whitecount blackcount n
-    | board == [] = if (whitecount < n) then true  -- if the board is empty and count of white pieces < 0, return true
-                    else if (blackcount < n) then true -- else if count of black pieces < 0, return true
-                    else false -- return false
-    | (head board) == "D" = countPieces (tail board) whitecount blackcount n -- if the piece is "D", recursively call countPieces with the rest of the board
-    | (head board) == "W" = countPieces (tail board) (whitecount + 1) blackcount n -- if the piece is "W", recursively call countPieces with the rest of the board and increment the count of white pieces
-    | (head board) == "B" = countPieces (tail board) whitecount (blackcount + 1) n -- if the piece is "B", recursively call countPieces with the rest of the board and increment the count of black pieces
+countBoardPieces :: Board -> Int -> Int -> Int
+countBoardPieces board whitecount blackcount n
+    | board == [] = if (whitecount < n) then True  -- if the board is empty and count of white pieces < 0, return true
+                    else if (blackcount < n) then True -- else if count of black pieces < 0, return true
+                    else False -- return false
+    | (head board) == "D" = countBoardPieces (tail board) whitecount blackcount n -- if the piece is "D", recursively call countPieces with the rest of the board
+    | (head board) == "W" = countBoardPieces (tail board) (whitecount + 1) blackcount n -- if the piece is "W", recursively call countPieces with the rest of the board and increment the count of white pieces
+    | (head board) == "B" = countBoardPieces (tail board) whitecount (blackcount + 1) n -- if the piece is "B", recursively call countPieces with the rest of the board and increment the count of black pieces
  
 
 --
@@ -469,7 +482,7 @@ stateSearch board history grid slides jumps player depth num
 --
 
 generateTree :: Board -> [Board] -> Grid -> [Slide] -> [Jump] -> Piece -> Int -> Int -> BoardTree
-generateTree board history grid slides jumps player depth n =
+generateTree board history grid slides jumps player depth n
     | (depth <= 0)                                                          = []
     | (gameOver board history n)                                            = []
     | ((generateNewStates board history grid slides jumps player) == [])    = []
@@ -504,7 +517,7 @@ generateNewStates board history grid slides jumps player =
 
 
 createBoards :: State -> [Move] -> Piece -> [Board]
-createBoards state moves p = [updateBoard origin dest point piece p | m@(origin, dest) <- moves, s@(piece,point) <- state, ]
+createBoards state moves p = [updateBoard origin dest point piece p | m@(origin, dest) <- moves, s@(piece,point) <- state ]
 
 
 updateBoard :: State -> Point -> Point -> Piece -> Board
@@ -601,14 +614,22 @@ matchesPiece p state point = True `elem` [True | tile <- state, (snd tile) == po
 -- Returns: the goodness value of the provided board
 --
 
--- Goodness value determined by: 
+-- Goodness value determined by: The difference between black/white pieces on the board
+
 boardEvaluator :: Piece -> Board -> Int
-boardEvaluator player board = countPlayerPieces player board 0
+boardEvaluator player board = countPlayerPieces player board 0 0
   
-  
-countPlayerPieces :: Piece -> Board -> Int -> Int
-countPlayerPieces player board counter 
-  | (null board)             = counter     
+
+-- Count the pieces on the board and return the difference in black/white pieces
+countPlayerPieces :: Piece -> Board -> Int -> Int -> Int
+countPlayerPieces player board blackCounter whiteCounter
+    | player == "B" = (countPieces "B" board 0 0 ) - (countPieces "W" board 0 0 )
+    | otherwise     = (countPieces "W" board 0 0 ) - (countPieces "B" board 0 0 )
+
+
+countPieces :: Piece -> Board -> Int -> Int
+countPieces player board counter 
+  | (null board)           = counter     
   | (head board) == player = countPieces player (tail board) (counter + 1)
   | otherwise              = countPieces player (tail board) counter
 
@@ -631,7 +652,12 @@ countPlayerPieces player board counter
 --
 
 minimax :: BoardTree -> (Board -> Bool -> Int) -> Board
-minimax (Node _ b children) heuristic = -- To Be Completed
+minimax (Node _ b children) heuristic
+    | null children = b
+    | otherwise =
+        let listvals = [ (minimax' x heuristic False) | x <- children] -- create a list of minimax values
+            valindex = (itemfinder' (listvals) (maximum listvals) 0) -- find item with the max value
+        in board (children!!valindex) -- return board
 
 --
 -- minimax'
@@ -653,8 +679,17 @@ minimax (Node _ b children) heuristic = -- To Be Completed
 --
 -- Returns: the minimax value at the top of the tree
 --
-
 minimax' :: BoardTree -> (Board -> Bool -> Int) -> Bool -> Int
-minimax' boardTree heuristic maxPlayer = -- To Be Completed
+minimax' (Node _ b children) heuristic maxPlayer
+    | null children = heuristic b maxPlayer -- If the list of children is null, return 
+    | otherwise =
+        let minmaxlist = if maxPlayer then maximum else minimum  -- return max/min value from list based on maxPlayer
+        in minmaxlist [ (minimax' x heuristic (not maxPlayer)) | x <- children ] -- build list of minimax values for TRUE/FALSE maxPlayer
 
+
+-- Finds the index of an item in a list
+itemfinder' :: [Int] Int Int -> Int
+itemfinder' (a:ax) elem counter
+    | a == elem = counter
+    | otherwise = itemfinder' ax elem (counter + 1)
 

@@ -5,8 +5,8 @@ type Board = [Piece]
 type Grid = [Point]
 type State = [Tile]
 
-boardEvaluator :: Piece -> [Board] -> Int -> Board -> Bool -> Int
-boardEvaluator player history n board myTurn = -- To Be Completed
+--boardEvaluator :: Piece -> [Board] -> Int -> Board -> Bool -> Int
+--boardEvaluator player history n board myTurn = -- To Be Completed
 
 boardEvaluator :: Piece -> Board -> Int
 boardEvaluator player board = countPieces player board 0
