@@ -120,6 +120,10 @@ board0 = sTrToBoard "WWW-WW-------BB-BBB"
 board4 = sTrToBoard "WWWW-WWW---------------------BBB-BBBB"
 state0 = getState board0 grid0
 state4 = getState board4 grid4
+moves0W = moveGenerator state0 slides0 jumps0 W
+moves0B = moveGenerator state0 slides0 jumps0 B
+history0W = [sTrToBoard "-WWWWW-------BB-BBB",sTrToBoard "WWW-WW-------BB-BBB"]
+boards0W = createBoards state0 moves0W W
 
 -- getState :: Board -> Grid -> State
 -- getState b grid = [(zip' piece pt) | piece <- b | pt <- grid ]
@@ -130,7 +134,36 @@ getState xs     []     = []
 getState []     ys     = []
 getState (x:xs) (y:ys) = (x, y) : getState xs ys
 
+generateNewStates :: Board -> [Board] -> Grid -> [Slide] -> [Jump] -> Piece -> [Board]
+generateNewStates board history grid slides jumps player =
+    filterBoards (createBoards state moves player) history
+    where
+        state = (getState board grid)
+        moves = (moveGenerator state slides jumps player)
 
+
+createBoards :: State -> [Move] -> Piece -> [Board]
+createBoards state moves p = [(updateBoard state origin dest p) | m@(origin, dest) <- moves]
+
+updateBoard :: State -> Point -> Point -> Piece -> Board
+updateBoard state origin dest p = [updateBoardHelper origin dest point piece p | s@(piece,point) <- state]
+
+boardToStr :: Board -> String
+boardToStr b = map (\ x -> check x) b
+    where 
+        check W = 'W'
+        check B = 'B'
+        check D = '-'
+
+updateBoardHelper :: Point -> Point -> Point -> Piece -> Piece -> Piece
+updateBoardHelper origin dest point piece p 
+    | (origin == point)  = D
+    | (dest == point)    = p
+    | otherwise          = piece
+
+--filters out the boards that have already occurred in history
+filterBoards :: [Board] -> [Board] -> [Board]
+filterBoards boards history = [b | b <- boards, (not(b `elem` history))]
 
 moveGenerator :: State -> [Slide] -> [Jump] -> Piece -> [Move]
 moveGenerator state slides jumps player

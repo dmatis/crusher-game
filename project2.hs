@@ -446,7 +446,7 @@ stateSearch :: Board -> [Board] -> Grid -> [Slide] -> [Jump] -> Piece -> Int -> 
 stateSearch board history grid slides jumps player depth num
     | (gameOver board history num)                                          = board
     | ((generateNewStates board history grid slides jumps player) == [])    = board
-    | otherwise                       = minimax (generateTree board history grid slides jumps player depth num) boardEvalHeuristic
+    | otherwise                       = minimax (generateTree board history grid slides jumps player depth num) (boardEvaluator player board)
 --
 -- generateTree
 --
@@ -474,6 +474,7 @@ generateTree board history grid slides jumps player depth n =
     | (gameOver board history n)                                            = []
     | ((generateNewStates board history grid slides jumps player) == [])    = []
     | otherwise                          = (generateNewStates board history grid slides jumps players) ++ generateTree (depth-1)
+    -- then need to call recursively generateTree for each of the newstates
 
 --
 -- generateNewStates
@@ -505,15 +506,19 @@ generateNewStates board history grid slides jumps player =
 createBoards :: State -> [Move] -> Piece -> [Board]
 createBoards state moves p = [updateBoard origin dest point piece p | m@(origin, dest) <- moves, s@(piece,point) <- state, ]
 
-updateBoard :: Piece -> Point -> Piece
-updateBoard origin dest point piece p 
+
+updateBoard :: State -> Point -> Point -> Piece -> Board
+updateBoard state origin dest p = [updateBoardHelper origin dest point piece p | s@(piece,point) <- state]
+
+updateBoardHelper :: Point -> Point -> Point -> Piece -> Piece -> Piece
+updateBoardHelper origin dest point piece p 
     | (origin == point)  = D
     | (dest == point)    = p
     | otherwise          = piece
 
---filters out the boards that have already occurred
+--filters out the boards that have already occurred in history
 filterBoards :: [Board] -> [Board] -> [Board]
-filterBoards boards history = [b | b <- boards, (not b `elem` history)]
+filterBoards boards history = [b | b <- boards, (not(b `elem` history))]
 
 
 -- Zips together piece and point to create State
