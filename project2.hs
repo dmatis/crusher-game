@@ -214,8 +214,9 @@ convertCharToPiece player
   | otherwise = D
 
 gameOver :: Board -> [Board] -> Int -> Bool
-gameOver board history n = ((boardSeen board history)
-                          || (countBoardPieces board 0 0 n))
+gameOver board history n = ( (boardSeen board history)
+                          || (countBoardPieces board 0 0 n)
+                          || (lessThanHalfPieces board 0 0 n) )
 
 
 boardSeen :: Board -> [Board] -> Bool
@@ -234,7 +235,14 @@ countBoardPieces board whitecount blackcount n
     | (head board) == W = countBoardPieces (tail board) (whitecount + 1) blackcount n -- if the piece is "W", recursively call countPieces with the rest of the board and increment the count of white pieces
     | (head board) == B = countBoardPieces (tail board) whitecount (blackcount + 1) n -- if the piece is "B", recursively call countPieces with the rest of the board and increment the count of black pieces
  
-
+lessThanHalfPieces :: Board -> Int -> Int -> Int -> Int -> Bool
+lessThanHalfPieces board whitecount blackcount n
+    | board == [] = if (whitecount < (round (((2 * n) - 1)/2)) ) then True  -- if the board is empty and count of white pieces < 0, return true
+                    else if (blackcount < (round (((2 * n) - 1)/2)) ) then True -- else if count of black pieces < 0, return true
+                    else False -- return false
+    | (head board) == D = countBoardPieces (tail board) whitecount blackcount n -- if the piece is "D", recursively call countPieces with the rest of the board
+    | (head board) == W = countBoardPieces (tail board) (whitecount + 1) blackcount n -- if the piece is "W", recursively call countPieces with the rest of the board and increment the count of white pieces
+    | (head board) == B = countBoardPieces (tail board) whitecount (blackcount + 1) n -- if the piece is "B", recursively call countPieces with the rest of the board and increment the count of black pieces
 --
 -- sTrToBoard
 --
@@ -655,7 +663,7 @@ countPieces player board counter
 -- Returns: the next best board
 --
 
-minimax :: BoardTree -> (Board -> Bool -> Int) -> Board
+minimax :: BoardTree -> (Piece -> Board -> Int) -> Board
 minimax (Node _ b children) heuristic
     | null children = b
     | otherwise =
@@ -683,7 +691,7 @@ minimax (Node _ b children) heuristic
 --
 -- Returns: the minimax value at the top of the tree
 --
-minimax' :: BoardTree -> (Board -> Bool -> Int) -> Bool -> Int
+minimax' :: BoardTree -> (Piece -> Board -> Int) -> Bool -> Int
 minimax' (Node _ b children) heuristic maxPlayer
     | null children = heuristic b maxPlayer -- If the list of children is null, return 
     | otherwise =
