@@ -27,13 +27,15 @@ data Tree a = Node {depth :: Int, board :: a, nextBoards :: [Tree a]} deriving (
 type BoardTree = Tree Board
 
 gameOver :: Board -> [Board] -> Int -> Bool
-gameOver board history n = ((boardSeen board history)
-                          || (countBoardPieces board 0 0 n))
+gameOver board history n = ( (boardSeen board (tail history))
+                          || (countBoardPieces board 0 0 n)
+                          || (lessThanHalfPieces board 0 0 n) )
+
 
 boardSeen :: Board -> [Board] -> Bool
 boardSeen current_board boards 
     | boards == [] = False  -- if the board is empty return false
-    -- | current_board == (head boards) = True  --  if the current board is in list of boards return true
+    | current_board == (head boards) = True  --  if the current board is in list of boards return true
     | otherwise = boardSeen (current_board) (tail boards) -- else recursively call boardSeen with the rest of the history and the current board
 
 
@@ -44,7 +46,18 @@ countBoardPieces board whitecount blackcount n
                     else False -- return false
     | (head board) == D = countBoardPieces (tail board) whitecount blackcount n -- if the piece is "D", recursively call countPieces with the rest of the board
     | (head board) == W = countBoardPieces (tail board) (whitecount + 1) blackcount n -- if the piece is "W", recursively call countPieces with the rest of the board and increment the count of white pieces
-    | (head board) == B = countBoardPieces (tail board) whitecount (blackcount + 1) n -- if
+    | (head board) == B = countBoardPieces (tail board) whitecount (blackcount + 1) n -- if the piece is "B", recursively call countPieces with the rest of the board and increment the count of black pieces
+ 
+lessThanHalfPieces :: Board -> Int -> Int -> Int -> Bool
+lessThanHalfPieces board whitecount blackcount n
+    | board == [] = if (whitecount < (round cond)) then True  -- if the board is empty and count of white pieces < 0, return true
+                    else if (blackcount < (round cond)) then True -- else if count of black pieces < 0, return true
+                    else False -- return false
+    | (head board) == D = countBoardPieces (tail board) whitecount blackcount n -- if the piece is "D", recursively call countPieces with the rest of the board
+    | (head board) == W = countBoardPieces (tail board) (whitecount + 1) blackcount n -- if the piece is "W", recursively call countPieces with the rest of the board and increment the count of white pieces
+    | (head board) == B = countBoardPieces (tail board) whitecount (blackcount + 1) n -- if the piece is "B", recursively call countPieces with the rest of the board and increment the count of black pieces
+        where 
+            cond = (((2 * (fromIntegral n)) - 1) / 2) 
 
 generateSlides :: Grid -> Int -> [Slide]
 generateSlides b n = concat [genSlidesHelper b pt (genSlidePointsHelper pt n) | pt <- b ]
@@ -146,7 +159,9 @@ slides4 = generateSlides grid4 4
 jumps0 = generateLeaps grid0 3
 jumps4 = generateLeaps grid4 4
 board0 = sTrToBoard "WWW-WW-------BB-BBB"
-gameOverBoard1 = sTrToBoard "WWW-WW----------BBB"
+gameOverBoard1 = sTrToBoard "WWW-WW---------B--B"
+gameOverBoard2 = sTrToBoard "WWW-WW------------B"
+notGameOverBoard3 = sTrToBoard "WW---W----------BBB"
 board4 = sTrToBoard "WWWW-WWW---------------------BBB-BBBB"
 state0 = getState board0 grid0
 state4 = getState board4 grid4
@@ -155,7 +170,10 @@ moves0B = moveGenerator state0 slides0 jumps0 B
 history0W = [sTrToBoard "-WWWWW-------BB-BBB",sTrToBoard "WWW-WW-------BB-BBB"]
 boards0W = createBoards state0 moves0W W
 board0History = [sTrToBoard "WWW-WW-------BB-BBB"]
-gameOverHistory1 = [sTrToBoard "WWW-WW----------BBB"]
+gameOverHistory1 = [sTrToBoard "WWW-WW---------B--B"]
+gameOverHistory2 = [sTrToBoard "WWW-WW------------B"]
+notGameOverHistory3 = [sTrToBoard "WW---W----------BBB", sTrToBoard "-WW--W----------BBB", sTrToBoard "-W-W-W----------BBB"]
+
 
 -- getState :: Board -> Grid -> State
 -- getState b grid = [(zip' piece pt) | piece <- b | pt <- grid ]
@@ -202,16 +220,13 @@ filterBoards boards history = [b | b <- boards, (not(b `elem` history))]
 
 genTreeHelper :: Board -> [Board] -> Grid -> [Slide] -> [Jump] -> Piece -> Int -> Int -> Int -> BoardTree
 genTreeHelper board history grid slides jumps player depth n height
-    | (depth == height)                  = (Node height board [])
-    | (gameOver board history n)         = (Node height board [])
-    | otherwise                          = (Node height board [(genTreeHelper cBoard (board:history) grid slides jumps nextPlayer depth n (height+1)) |cBoard <- childBoards])
+    | (depth == height)                                                 = (Node height board [])
+    | (generateNewStates board history grid slides jumps player == [])  = (Node height board [])
+    | (gameOver board history n)                                        = (Node height board [])
+    | otherwise                          = (Node height board [(genTreeHelper cBoard (cBoard:history) grid slides jumps nextPlayer depth n (height+1)) |cBoard <- childBoards])
         where
             childBoards = (generateNewStates board history grid slides jumps player)
             nextPlayer = if player == W then B else W
-
-
-
-
 
 
 
