@@ -335,9 +335,8 @@ generateGrid n1 n2 n3 acc
 --generateSlides grid0 sizeGrid
 --ie generateSlides grid0 3 
 generateSlides :: Grid -> Int -> [Slide]
-generateSlides b n = concat [genSlidesHelper b pt (genPointsHelper pt n) | pt <- b ]
+generateSlides b n = concat [genSlidesHelper b pt (genSlidePointsHelper pt n) | pt <- b ]
 
---generates a list of all valid slides from a given point
 genSlidePointsHelper :: Point -> Int -> [Point]
 genSlidePointsHelper pt n
     | ((snd pt) < n-1)     = ((fst pt)+1,(snd pt)) : ((fst pt)-1,(snd pt)) :
@@ -487,9 +486,9 @@ stateSearch board history grid slides jumps player depth num
 
 generateTree :: Board -> [Board] -> Grid -> [Slide] -> [Jump] -> Piece -> Int -> Int -> BoardTree
 generateTree board history grid slides jumps player depth n
-    | (depth <= 0)                                                          = []
-    | (gameOver board history n)                                            = []
-    | ((generateNewStates board history grid slides jumps player) == [])    = []
+    | (depth <= 0)                                                          = board
+    | (gameOver board history n)                                            = board
+    | ((generateNewStates board history grid slides jumps player) == [])    = board
     | otherwise                          = (generateNewStates board history grid slides jumps player) ++ generateTree (depth-1)
     -- then need to call recursively generateTree for each of the newstates
 
