@@ -520,8 +520,7 @@ generateNewStates board history grid slides jumps player =
 
 
 createBoards :: State -> [Move] -> Piece -> [Board]
-createBoards state moves p = [updateBoard origin dest point piece p | m@(origin, dest) <- moves, s@(piece,point) <- state ]
-
+createBoards state moves p = [(updateBoard state origin dest p) | m@(origin, dest) <- moves]
 
 updateBoard :: State -> Point -> Point -> Piece -> Board
 updateBoard state origin dest p = [updateBoardHelper origin dest point piece p | s@(piece,point) <- state]
@@ -535,7 +534,6 @@ updateBoardHelper origin dest point piece p
 --filters out the boards that have already occurred in history
 filterBoards :: [Board] -> [Board] -> [Board]
 filterBoards boards history = [b | b <- boards, (not(b `elem` history))]
-
 
 -- Zips together piece and point to create State
 getState :: Board -> Grid -> State
@@ -654,7 +652,7 @@ countPieces player board counter
 -- Returns: the next best board
 --
 
-minimax :: BoardTree -> (Board -> Bool -> Int) -> Board
+minimax :: BoardTree -> Int -> Board
 minimax (Node _ b children) heuristic
     | null children = b
     | otherwise =
