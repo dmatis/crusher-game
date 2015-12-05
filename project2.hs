@@ -97,7 +97,7 @@ data Tree a = Node {depth :: Int, board :: a, nextBoards :: [Tree a]} deriving (
 
 --
 -- BoardTree is the internal representation of the search tree of the given board
--- that is to be generatated for correctly implementing the minimax algorithm.
+-- that is to be generated for correctly implementing the minimax algorithm.
 --
 
 type BoardTree = Tree Board
@@ -485,11 +485,12 @@ stateSearch board history grid slides jumps player depth num
 
 generateTree :: Board -> [Board] -> Grid -> [Slide] -> [Jump] -> Piece -> Int -> Int -> BoardTree
 generateTree board history grid slides jumps player depth n
-    | (depth <= 0)                                                          = board
-    | (gameOver board history n)                                            = board
-    | ((generateNewStates board history grid slides jumps player) == [])    = board
-    | otherwise                          = (generateNewStates board history grid slides jumps player) ++ generateTree (depth-1)
-    -- then need to call recursively generateTree for each of the newstates
+    | (depth == 1)                       = (Node depth board [])
+    | (gameOver board history n)         = (Node depth board [])
+    | otherwise                          = (Node depth board [generateTree b (board:history) grid slides jumps nextPlayer (depth-1) n |b <- childBoards])
+        where
+            childBoards = (generateNewStates board history grid slides jumps player)
+            nextPlayer = if player == W then B else W
 
 --
 -- generateNewStates
