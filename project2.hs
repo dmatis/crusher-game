@@ -609,11 +609,13 @@ matchesPiece p state point = True `elem` [True | tile <- state, (snd tile) == po
 -- Returns: the goodness value of the provided board
 --
 
--- Goodness value determined by: 
+-- Goodness value determined by: The difference between black/white pieces on the board
+
 boardEvaluator :: Piece -> Board -> Int
 boardEvaluator player board = countPlayerPieces player board 0 0
   
 
+-- Count the pieces on the board and return the difference in black/white pieces
 countPlayerPieces :: Piece -> Board -> Int -> Int -> Int
 countPlayerPieces player board blackCounter whiteCounter
     | player == "B" = (countPieces "B" board 0 0 ) - (countPieces "W" board 0 0 )
@@ -648,9 +650,9 @@ minimax :: BoardTree -> (Board -> Bool -> Int) -> Board
 minimax (Node _ b children) heuristic
     | null children = b
     | otherwise =
-        let listvals = [ (minimax' x heuristic False) | x <- children]
-            valindex = (itemfinder' (listvals) (maximum listvals) 0)
-        in board (children!!valindex)
+        let listvals = [ (minimax' x heuristic False) | x <- children] -- create a list of minimax values
+            valindex = (itemfinder' (listvals) (maximum listvals) 0) -- find item with the max value
+        in board (children!!valindex) -- return board
 
 --
 -- minimax'
@@ -672,15 +674,15 @@ minimax (Node _ b children) heuristic
 --
 -- Returns: the minimax value at the top of the tree
 --
-
 minimax' :: BoardTree -> (Board -> Bool -> Int) -> Bool -> Int
 minimax' (Node _ b children) heuristic maxPlayer
-    | null children = heuristic b maxPlayer
+    | null children = heuristic b maxPlayer -- If the list of children is null, return 
     | otherwise =
-        let minmaxlist = if maxPlayer then maximum else minimum
-        in minmaxlist [ (minimax' x heuristic (not maxPlayer)) | x <- children ]
+        let minmaxlist = if maxPlayer then maximum else minimum  -- return max/min value from list based on maxPlayer
+        in minmaxlist [ (minimax' x heuristic (not maxPlayer)) | x <- children ] -- build list of minimax values for TRUE/FALSE maxPlayer
 
 
+-- Finds the index of an item in a list
 itemfinder' :: [Int] Int Int -> Int
 itemfinder' (a:ax) elem counter
     | a == elem = counter
