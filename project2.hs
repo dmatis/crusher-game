@@ -97,7 +97,7 @@ data Tree a = Node {depth :: Int, board :: a, nextBoards :: [Tree a]} deriving (
 
 --
 -- BoardTree is the internal representation of the search tree of the given board
--- that is to be generatated for correctly implementing the minimax algorithm.
+-- that is to be generated for correctly implementing the minimax algorithm.
 --
 
 type BoardTree = Tree Board
@@ -339,13 +339,10 @@ generateGrid n1 n2 n3 acc
 -- Returns: the list of all Slides possible on the given grid
 --
 
---To Test, call:
---generateSlides grid0 sizeGrid
---ie generateSlides grid0 3 
 generateSlides :: Grid -> Int -> [Slide]
-generateSlides b n = concat [genSlidesHelper b pt (genPointsHelper pt n) | pt <- b ]
+generateSlides b n = concat [genSlidesHelper b pt (genSlidePointsHelper pt n) | pt <- b ]
 
---generates a list of all valid slides from a given point
+--Generates the list of possible slides from a given point in the board (pt)
 genSlidePointsHelper :: Point -> Int -> [Point]
 genSlidePointsHelper pt n
     | ((snd pt) < n-1)     = ((fst pt)+1,(snd pt)) : ((fst pt)-1,(snd pt)) :
@@ -390,7 +387,7 @@ genSlidesHelper b oldPt points = [(oldPt, newPt) | newPt <- points, newPt `elem`
 generateLeaps :: Grid -> Int -> [Jump]
 generateLeaps b n = concat [genLeapsHelper b (genPointsHelper pt n) | pt <- b ]
 
---generates a list of all valid moves from a given point
+--generates a list of all valid jumps from a given point
 genPointsHelper :: Point -> Int -> [Jump]
 genPointsHelper pt n
 
@@ -429,6 +426,7 @@ genPointsHelper pt n
                              (pt, ((fst pt)+1,(snd pt)-1), ((fst pt)+2,(snd pt)-2)) : 
                              (pt, ((fst pt)-1,(snd pt)+1), ((fst pt)-2,(snd pt)+2)) : []
 
+--Filters the list of jumps to return only the valid ones
 genLeapsHelper :: Grid -> [Jump] -> [Jump]
 genLeapsHelper b jumps = [((fstPt jump),(sndPt jump), (thdPt jump)) | jump <- jumps, (sndPt jump) `elem` b, (thdPt jump) `elem` b]
 
@@ -494,12 +492,18 @@ stateSearch board history grid slides jumps player depth num
 --
 
 generateTree :: Board -> [Board] -> Grid -> [Slide] -> [Jump] -> Piece -> Int -> Int -> BoardTree
-generateTree board history grid slides jumps player depth n
-    | (depth <= 0)                                                          = []
-    | (gameOver board history n)                                            = []
-    | ((generateNewStates board history grid slides jumps player) == [])    = []
-    | otherwise                          = (generateNewStates board history grid slides jumps player) ++ generateTree (depth-1)
-    -- then need to call recursively generateTree for each of the newstates
+generateTree board history grid slides jumps player depth n = genTreeHelper board history grid slides jumps player depth n 0
+
+--generateTree helper function to add additional height argument
+genTreeHelper :: Board -> [Board] -> Grid -> [Slide] -> [Jump] -> Piece -> Int -> Int -> Int -> BoardTree
+genTreeHelper board history grid slides jumps player depth n height
+
+    | (depth == height)                  = (Node height board [])
+    | (gameOver board history n)         = (Node height board [])
+    | otherwise                          = (Node height board [genTreeHelper b (board:history) grid slides jumps nextPlayer depth n (height+1) |b <- childBoards])
+        where
+            childBoards = (generateNewStates board history grid slides jumps player)
+            nextPlayer = if player == W then B else W
 
 --
 -- generateNewStates
@@ -527,26 +531,26 @@ generateNewStates board history grid slides jumps player =
         state = (getState board grid)
         moves = (moveGenerator state slides jumps player)
 
-
+--Creates the list of all possible boards from a list of valid moves in a given state
 createBoards :: State -> [Move] -> Piece -> [Board]
-createBoards state moves p = [updateBoard origin dest point piece p | m@(origin, dest) <- moves, s@(piece,point) <- state ]
+createBoards state moves p = [(updateBoard state origin dest p) | m@(origin, dest) <- moves]
 
-
+--For each piece in a given state, updates it to contain the correct piece after a move has completed
 updateBoard :: State -> Point -> Point -> Piece -> Board
 updateBoard state origin dest p = [updateBoardHelper origin dest point piece p | s@(piece,point) <- state]
 
+--Updates points in a board, origin of moved piece becomes blank, destination becomes the piece
 updateBoardHelper :: Point -> Point -> Point -> Piece -> Piece -> Piece
 updateBoardHelper origin dest point piece p 
     | (origin == point)  = D
     | (dest == point)    = p
     | otherwise          = piece
 
---filters out the boards that have already occurred in history
+--Filters out the boards that have already occurred in history
 filterBoards :: [Board] -> [Board] -> [Board]
 filterBoards boards history = [b | b <- boards, (not(b `elem` history))]
 
-
--- Zips together piece and point to create State
+--Zips together piece and point to create State
 getState :: Board -> Grid -> State
 getState xs     []     = []
 getState []     ys     = []
