@@ -486,7 +486,7 @@ generateTree board history grid slides jumps player depth n
     | (depth <= 0)                                                          = []
     | (gameOver board history n)                                            = []
     | ((generateNewStates board history grid slides jumps player) == [])    = []
-    | otherwise                          = (generateNewStates board history grid slides jumps players) ++ generateTree (depth-1)
+    | otherwise                          = (generateNewStates board history grid slides jumps player) ++ generateTree (depth-1)
     -- then need to call recursively generateTree for each of the newstates
 
 --
@@ -688,8 +688,9 @@ minimax' (Node _ b children) heuristic maxPlayer
 
 
 -- Finds the index of an item in a list
-itemfinder' :: [Int] Int Int -> Int
-itemfinder' (a:ax) elem counter
-    | a == elem = counter
-    | otherwise = itemfinder' ax elem (counter + 1)
+
+itemfinder' :: [Int] -> Int -> Int -> Int
+itemfinder' (a:ax) el counter
+    | a == el = counter
+    | otherwise = itemfinder' ax el (counter + 1)
 
