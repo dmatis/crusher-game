@@ -621,14 +621,14 @@ matchesPiece p state point = True `elem` [True | tile <- state, (snd tile) == po
 -- Goodness value determined by: The difference between black/white pieces on the board
 
 boardEvaluator :: Piece -> Board -> Int
-boardEvaluator player board = countPlayerPieces player board 0 0
+boardEvaluator player board = countPlayerPieces player board 0
   
 
 -- Count the pieces on the board and return the difference in black/white pieces
-countPlayerPieces :: Piece -> Board -> Int -> Int -> Int
-countPlayerPieces player board blackCounter whiteCounter
-    | player == "B" = (countPieces "B" board 0 0 ) - (countPieces "W" board 0 0 )
-    | otherwise     = (countPieces "W" board 0 0 ) - (countPieces "B" board 0 0 )
+countPlayerPieces :: Piece -> Board -> Int  -> Int
+countPlayerPieces player board counter
+    | player == B = (countPieces B board 0) - (countPieces W board 0)
+    | otherwise     = (countPieces W board 0) - (countPieces B board 0)
 
 
 countPieces :: Piece -> Board -> Int -> Int
