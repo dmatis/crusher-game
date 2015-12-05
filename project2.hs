@@ -148,16 +148,20 @@ play history@(current:old) player depth n
 --
 -- Some test results to see what functions are producing 
 --
-run = crusher ["W------------BB-BBB","----W--------BB-BBB","-W-----------BB-BBB"] 'W' 2 3
 grid0 = generateGrid 3 2 4 []
 grid4 = generateGrid 4 2 4 []
 slides0 = generateSlides grid0 3
+slides4 = generateSlides grid4 4
 jumps0 = generateLeaps grid0 3
+jumps4 = generateLeaps grid4 4
 board0 = sTrToBoard "WWW-WW-------BB-BBB"
-newBoards0 = generateNewStates board0 [] grid0 slides0 jumps0 W
-tree0 = generateTree board0 [] grid0 slides0 jumps0 W 4 3
-heuristic0 = boardEvaluator W [] 3
+board4 = sTrToBoard "WWWW-WWW---------------------BBB-BBBB"
 state0 = getState board0 grid0
+state4 = getState board4 grid4
+moves0W = moveGenerator state0 slides0 jumps0 W
+moves0B = moveGenerator state0 slides0 jumps0 B
+history0W = [sTrToBoard "-WWWWW-------BB-BBB",sTrToBoard "WWW-WW-------BB-BBB"]
+boards0W = createBoards state0 moves0W W
 
 --
 -- crusher
@@ -179,7 +183,7 @@ state0 = getState board0 grid0
 
 crusher :: [String] -> Char -> Int -> Int -> [String]
 crusher (current:old) player d size =
-    let optimalBoard = (stateSearch board history grid slides leaps) (convertCharToPiece d) size
+    let optimalBoard = (stateSearch board history grid slides leaps (convertCharToPiece player) d size)
     in ((boardToStr optimalBoard):(current:old))
         where
             grid = generateGrid size (size - 1) (2 * (size - 1)) []
@@ -210,8 +214,8 @@ convertCharToPiece player
   | otherwise = D
 
 gameOver :: Board -> [Board] -> Int -> Bool
-gameOver board history n = boardSeen board history
-                          || countBoardPieces board 0 0 n
+gameOver board history n = ((boardSeen board history)
+                          || (countBoardPieces board 0 0 n))
 
 
 boardSeen :: Board -> [Board] -> Bool
@@ -221,14 +225,14 @@ boardSeen current_board boards
     | otherwise = boardSeen (current_board) (tail boards) -- else recursively call boardSeen with the rest of the history and the current board
 
 
-countBoardPieces :: Board -> Int -> Int -> Int
+countBoardPieces :: Board -> Int -> Int -> Int -> Bool
 countBoardPieces board whitecount blackcount n
     | board == [] = if (whitecount < n) then True  -- if the board is empty and count of white pieces < 0, return true
                     else if (blackcount < n) then True -- else if count of black pieces < 0, return true
                     else False -- return false
-    | (head board) == "D" = countBoardPieces (tail board) whitecount blackcount n -- if the piece is "D", recursively call countPieces with the rest of the board
-    | (head board) == "W" = countBoardPieces (tail board) (whitecount + 1) blackcount n -- if the piece is "W", recursively call countPieces with the rest of the board and increment the count of white pieces
-    | (head board) == "B" = countBoardPieces (tail board) whitecount (blackcount + 1) n -- if the piece is "B", recursively call countPieces with the rest of the board and increment the count of black pieces
+    | (head board) == D = countBoardPieces (tail board) whitecount blackcount n -- if the piece is "D", recursively call countPieces with the rest of the board
+    | (head board) == W = countBoardPieces (tail board) (whitecount + 1) blackcount n -- if the piece is "W", recursively call countPieces with the rest of the board and increment the count of white pieces
+    | (head board) == B = countBoardPieces (tail board) whitecount (blackcount + 1) n -- if the piece is "B", recursively call countPieces with the rest of the board and increment the count of black pieces
  
 
 --
