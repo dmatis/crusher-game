@@ -176,7 +176,15 @@ heuristic0 = boardEvaluator W [] 3
 --
 
 crusher :: [String] -> Char -> Int -> Int -> [String]
-crusher (current:old) p d n = -- To Be Completed
+crusher (current:old) player d size =
+    let optimalBoard = (stateSearch board history grid slides leaps) (convert_char_to_piece d) size
+    in ((boardToStr optimalBoard):(current:old))
+        where
+            grid = generateGrid size (size - 1) (2 * (size - 1)) []
+            slides = generateSlides grid size
+            leaps = generateLeaps grid size
+            board = sTrToBoard current
+            history = map sTrToBoard old
 
 --
 -- gameOver
@@ -215,7 +223,11 @@ countPieces board whitecount blackcount n
     | (head board) == "W" = countPieces (tail board) (whitecount + 1) blackcount n -- if the piece is "W", recursively call countPieces with the rest of the board and increment the count of white pieces
     | (head board) == "B" = countPieces (tail board) whitecount (blackcount + 1) n -- if the piece is "B", recursively call countPieces with the rest of the board and increment the count of black pieces
  
-
+convertCharToPiece :: Char -> Piece
+convertCharToPiece player
+  | player == 'W' = W
+  | player == 'B' = B
+  | otherwise = D
 --
 -- sTrToBoard
 --
@@ -546,12 +558,18 @@ blankTile state point =  True `elem` [True | tile <- state, (snd tile) == point,
 
 -- Goodness value determined by: 
 boardEvaluator :: Piece -> Board -> Int
-boardEvaluator player board = countPlayerPieces player board 0
+boardEvaluator player board = countPlayerPieces player board 0 0
   
-  
-countPlayerPieces :: Piece -> Board -> Int -> Int
-countPlayerPieces player board counter 
-  | (null board)             = counter     
+
+countPlayerPieces :: Piece -> Board -> Int -> Int -> Int
+countPlayerPieces player board blackCounter whiteCounter
+    | player == "B" = (countPieces "B" board 0 0 ) - (countPieces "W" board 0 0 )
+    | otherwise     = (countPieces "W" board 0 0 ) - (countPieces "B" board 0 0 )
+
+
+countPieces :: Piece -> Board -> Int -> Int
+countPieces player board counter 
+  | (null board)           = counter     
   | (head board) == player = countPieces player (tail board) (counter + 1)
   | otherwise              = countPieces player (tail board) counter
 
@@ -574,7 +592,12 @@ countPlayerPieces player board counter
 --
 
 minimax :: BoardTree -> (Board -> Bool -> Int) -> Board
-minimax (Node _ b children) heuristic = -- To Be Completed
+minimax (Node _ b children) heuristic
+    | null children = b
+    | otherwise =
+        let listvals = [ (minimax' x heuristic False) | x <- children]
+            valindex     = (itemfinder (listvals) (maximum listvals) 0)
+        in board (children!!valindex)
 
 --
 -- minimax'
@@ -598,6 +621,15 @@ minimax (Node _ b children) heuristic = -- To Be Completed
 --
 
 minimax' :: BoardTree -> (Board -> Bool -> Int) -> Bool -> Int
-minimax' boardTree heuristic maxPlayer = -- To Be Completed
+minimax' (Node _ b children) heuristic maxPlayer
+    | null children = heuristic b maxPlayer
+    | otherwise =
+        let minmaxlist = if maxPlayer then maximum else minimum
+        in minmaxlist [ (minimax' x heuristic (not maxPlayer)) | x <- children ]
 
+
+itemfinder' :: [Int] Int Int -> Int
+itemfinder' (a:ax) elem counter
+    | a == elem = counter
+    | otherwise = itemfinder' ax elem (counter + 1)
 
