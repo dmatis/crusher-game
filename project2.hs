@@ -1,5 +1,6 @@
 -- CPSC 312 - Project 2
 -- 
+import Debug.Trace
 -- Name: Darren Matis
 -- Student Number: 94897071
 -- ugrad ID: f3w8
@@ -139,7 +140,7 @@ type Move = (Point,Point)
 
 play :: [String] -> Char -> Int -> Int -> IO ()
 play history@(current:old) player depth n
-  | gameOver (sTrToBoard current) (map sTrToBoard old) n = putStrLn "Game over."
+  | gameOver (sTrToBoard current) (map sTrToBoard history) n = putStrLn "Game over."
   | otherwise = do 
        let history'@(new:_) = crusher history player depth n
        putStrLn $ player:" played: " ++ new
@@ -167,7 +168,7 @@ history1W = ["-WWWWW-------BB-BBB","WWW-WW-------BB-BBB"]
 boards0W = createBoards state0 moves0W W
 
 crushBoard = "WWW-WW---B---B----B"
-crushBoardHist = ["WWW-WW---B---B----B"]
+crushBoardHist = ["WWW--WW--B---B----B", "WWW-WW---B---B----B"]
 
 --
 -- crusher
