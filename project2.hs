@@ -214,7 +214,7 @@ convertCharToPiece player
   | otherwise = D
 
 gameOver :: Board -> [Board] -> Int -> Bool
-gameOver board history n = ( (boardSeen board history)
+gameOver board history n = ( (boardSeen board (tail history))
                           || (countBoardPieces board 0 0 n)
                           || (lessThanHalfPieces board 0 0 n) )
 
@@ -234,15 +234,17 @@ countBoardPieces board whitecount blackcount n
     | (head board) == D = countBoardPieces (tail board) whitecount blackcount n -- if the piece is "D", recursively call countPieces with the rest of the board
     | (head board) == W = countBoardPieces (tail board) (whitecount + 1) blackcount n -- if the piece is "W", recursively call countPieces with the rest of the board and increment the count of white pieces
     | (head board) == B = countBoardPieces (tail board) whitecount (blackcount + 1) n -- if the piece is "B", recursively call countPieces with the rest of the board and increment the count of black pieces
- 
+
 lessThanHalfPieces :: Board -> Int -> Int -> Int -> Bool
 lessThanHalfPieces board whitecount blackcount n
-    | board == [] = if (whitecount < (round (((2 * n) - 1)/2)) ) then True  -- if the board is empty and count of white pieces < 0, return true
-                    else if (blackcount < (round (((2 * n) - 1)/2)) ) then True -- else if count of black pieces < 0, return true
+    | board == [] = if (whitecount < (round cond)) then True  -- if the board is empty and count of white pieces < 0, return true
+                    else if (blackcount < (round cond)) then True -- else if count of black pieces < 0, return true
                     else False -- return false
     | (head board) == D = countBoardPieces (tail board) whitecount blackcount n -- if the piece is "D", recursively call countPieces with the rest of the board
     | (head board) == W = countBoardPieces (tail board) (whitecount + 1) blackcount n -- if the piece is "W", recursively call countPieces with the rest of the board and increment the count of white pieces
     | (head board) == B = countBoardPieces (tail board) whitecount (blackcount + 1) n -- if the piece is "B", recursively call countPieces with the rest of the board and increment the count of black pieces
+        where 
+            cond = (((2 * (fromIntegral n)) - 1) / 2) 
 --
 -- sTrToBoard
 --
@@ -497,9 +499,9 @@ generateTree board history grid slides jumps player depth n = genTreeHelper boar
 --generateTree helper function to add additional height argument
 genTreeHelper :: Board -> [Board] -> Grid -> [Slide] -> [Jump] -> Piece -> Int -> Int -> Int -> BoardTree
 genTreeHelper board history grid slides jumps player depth n height
-
-    | (depth == height)                  = (Node height board [])
-    | (gameOver board history n)         = (Node height board [])
+    | (depth == height)                                                 = (Node height board [])
+    | (generateNewStates board history grid slides jumps player == [])  = (Node height board [])
+    | (gameOver board history n)                                        = (Node height board [])
     | otherwise                          = (Node height board [genTreeHelper b (board:history) grid slides jumps nextPlayer depth n (height+1) |b <- childBoards])
         where
             childBoards = (generateNewStates board history grid slides jumps player)
