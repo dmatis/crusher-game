@@ -834,7 +834,6 @@ minimax' (Node _ b children) heuristic maxPlayer player history n
     | otherwise =
         let minmaxlist = if maxPlayer then maximum else minimum  -- return max/min value from list based on maxPlayer
         in minmaxlist [ (minimax' x heuristic (not maxPlayer) player history n) | x <- children ] -- build list of minimax values for TRUE/FALSE maxPlayer
-HEAD
 
 -- Finds the index of an item in a list
 
