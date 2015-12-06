@@ -164,6 +164,9 @@ history0W = [sTrToBoard "-WWWWW-------BB-BBB",sTrToBoard "WWW-WW-------BB-BBB"]
 history1W = ["-WWWWW-------BB-BBB","WWW-WW-------BB-BBB"]
 boards0W = createBoards state0 moves0W W
 
+crushBoard = "WWW-WW---B---B----B"
+crushBoardHist = ["WWW-WW---B---B----B"]
+
 --
 -- crusher
 --
@@ -246,7 +249,7 @@ lessThanHalfPieces board whitecount blackcount n
     | (head board) == B = countBoardPieces (tail board) whitecount (blackcount + 1) n -- if the piece is "B", recursively call countPieces with the rest of the board and increment the count of black pieces
         where 
             cond = (((2 * (fromIntegral n)) - 1) / 2) 
-            
+
 -- sTrToBoard
 --
 -- This function consumes a list of characters which can be either 'W' or 'B'
@@ -472,7 +475,7 @@ stateSearch :: Board -> [Board] -> Grid -> [Slide] -> [Jump] -> Piece -> Int -> 
 stateSearch board history grid slides jumps player depth num
     | (gameOver board history num)                                          = board
     | ((generateNewStates board history grid slides jumps player) == [])    = board
-    | otherwise                       = minimax (generateTree board history grid slides jumps player depth num) (boardEvaluator player board) player
+    | otherwise                       = minimax (generateTree board history grid slides jumps player depth num) (boardEvaluator player board history num) player
 --
 -- generateTree
 --
@@ -635,8 +638,25 @@ matchesPiece p state point = True `elem` [True | tile <- state, (snd tile) == po
 
 -- Goodness value determined by: The difference between black/white pieces on the board
 
-boardEvaluator :: Piece -> Board -> Int
-boardEvaluator player board = countPlayerPieces player board 0
+boardEvaluator :: Piece -> Board -> [Board] -> Int -> Int
+boardEvaluator player board history n
+    | (gameOver board history n) == True = getFinalScore (whoWon (countPlayerPieces player board 0) player) player
+    | otherwise = countPlayerPieces player board 0
+
+whoWon :: Int -> Piece -> Piece
+whoWon num player
+    | (num < 0) = (getOtherPlayer player)
+    | otherwise = player
+
+getOtherPlayer :: Piece -> Piece
+getOtherPlayer player
+    | player == B = W
+    | otherwise = B
+
+getFinalScore :: Piece -> Piece -> Int
+getFinalScore winner player
+    | winner == player = 10
+    | otherwise = (-10)
   
 
 -- Count the pieces on the board and return the difference in black/white pieces
