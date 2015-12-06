@@ -738,7 +738,7 @@ matchesPiece p state point = True `elem` [True | tile <- state, (snd tile) == po
 
 boardEvaluator :: Piece -> Board -> [Board] -> Int -> Int
 boardEvaluator player board history n
-    | (gameOver board history n) == True = getFinalScore (whoWon (countPlayerPieces player board 0) player) player -- if its gameOver, get the Final Score for the player
+    | (gameOver board history n) == True = getFinalScore (whoWon (countPlayerPieces player board 0) player) player n-- if its gameOver, get the Final Score for the player
     | otherwise = countPlayerPieces player board 0 -- else return the heuristic calculation
 
 -- Checks who won based on wheather the result of countPlayerPieces is less than 0 or greater than 0
@@ -754,10 +754,10 @@ getOtherPlayer player
     | otherwise = B -- if the player is W return B
 
 -- Outputs 10 if the player won or -10 if the player lost
-getFinalScore :: Piece -> Piece -> Int
-getFinalScore winner player
-    | winner == player = 10 -- if the player is the winner, return 10
-    | otherwise = (-10) -- if the player is not the winner, return -10
+getFinalScore :: Piece -> Piece -> Int -> Int
+getFinalScore winner player n
+    | winner == player = (2 * n) -- if the player is the winner, return 10
+    | otherwise = (- (2 * n)) -- if the player is not the winner, return -10
   
 
 -- Count the pieces on the board and return the difference in black/white pieces from the perspective of the player
