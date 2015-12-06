@@ -156,6 +156,7 @@ slides4 = generateSlides grid4 4
 jumps0 = generateLeaps grid0 3
 jumps4 = generateLeaps grid4 4
 board0 = sTrToBoard "WWW-WW-------BB-BBB"
+board1 = sTrToBoard "-WWWWW-------BB-BBB"
 boardCrush = sTrToBoard "WWW-WW--B-----B-BBB"
 board4 = sTrToBoard "WWWW-WWW---------------------BBB-BBBB"
 state0 = getState board0 grid0
@@ -478,7 +479,7 @@ stateSearch :: Board -> [Board] -> Grid -> [Slide] -> [Jump] -> Piece -> Int -> 
 stateSearch board history grid slides jumps player depth num
     | (gameOver board history num)                                          = board
     | ((generateNewStates board history grid slides jumps player) == [])    = board
-    | otherwise                       = minimax (generateTree board history grid slides jumps player depth num) (boardEvaluator player board history num) player
+    | otherwise                       = minimax (generateTree board history grid slides jumps player depth num) (boardEvaluator player board history num) player history num
 --
 -- generateTree
 --
@@ -649,7 +650,7 @@ boardEvaluator player board history n
 whoWon :: Int -> Piece -> Piece
 whoWon num player
     | (num < 0) = (getOtherPlayer player)
-    | otherwise = player
+    | (num > 0) = player
 
 getOtherPlayer :: Piece -> Piece
 getOtherPlayer player
@@ -693,11 +694,11 @@ countPieces player board counter
 -- Returns: the next best board
 --
 
-minimax :: BoardTree -> Int -> Piece -> Board
-minimax (Node _ b children) heuristic player
+minimax :: BoardTree -> Int -> Piece -> [Board] -> Int ->Board
+minimax (Node _ b children) heuristic player history n
     | null children = b
     | otherwise =
-        let listvals = [ (minimax' x heuristic False player) | x <- children] -- create a list of minimax values
+        let listvals = [ (minimax' x heuristic False player history n) | x <- children] -- create a list of minimax values
             valindex = (itemfinder' (listvals) (maximum listvals) 0) -- find item with the max value
         in board (children!!valindex) -- return board
 
@@ -721,12 +722,12 @@ minimax (Node _ b children) heuristic player
 --
 -- Returns: the minimax value at the top of the tree
 --
-minimax' :: BoardTree -> Int -> Bool -> Piece -> Int
-minimax' (Node _ b children) heuristic maxPlayer player
-    | null children = heuristic -- If the list of children is null, return 
+minimax' :: BoardTree -> Int -> Bool -> Piece -> [Board] -> Int -> Int
+minimax' (Node _ b children) heuristic maxPlayer player history n
+    | null children = (boardEvaluator player b history n) -- If the list of children is null, return 
     | otherwise =
         let minmaxlist = if maxPlayer then maximum else minimum  -- return max/min value from list based on maxPlayer
-        in minmaxlist [ (minimax' x heuristic (not maxPlayer) player) | x <- children ] -- build list of minimax values for TRUE/FALSE maxPlayer
+        in minmaxlist [ (minimax' x heuristic (not maxPlayer) player history n) | x <- children ] -- build list of minimax values for TRUE/FALSE maxPlayer
 
 
 -- Finds the index of an item in a list
