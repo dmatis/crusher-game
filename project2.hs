@@ -161,6 +161,7 @@ state4 = getState board4 grid4
 moves0W = moveGenerator state0 slides0 jumps0 W
 moves0B = moveGenerator state0 slides0 jumps0 B
 history0W = [sTrToBoard "-WWWWW-------BB-BBB",sTrToBoard "WWW-WW-------BB-BBB"]
+history1W = ["-WWWWW-------BB-BBB","WWW-WW-------BB-BBB"]
 boards0W = createBoards state0 moves0W W
 
 --
@@ -214,7 +215,7 @@ convertCharToPiece player
   | otherwise = D
 
 gameOver :: Board -> [Board] -> Int -> Bool
-gameOver board history n = ( (boardSeen board history)
+gameOver board history n = ( (boardSeen board (tail history))
                           || (countBoardPieces board 0 0 n)
                           || (lessThanHalfPieces board 0 0 n) )
 
@@ -237,13 +238,14 @@ countBoardPieces board whitecount blackcount n
  
 lessThanHalfPieces :: Board -> Int -> Int -> Int -> Bool
 lessThanHalfPieces board whitecount blackcount n
-    | board == [] = if (whitecount < (round (((2 * n) - 1)/2)) ) then True  -- if the board is empty and count of white pieces < 0, return true
-                    else if (blackcount < (round (((2 * n) - 1)/2)) ) then True -- else if count of black pieces < 0, return true
+    | board == [] = if (whitecount < (round cond)) then True  -- if the board is empty and count of white pieces < 0, return true
+                    else if (blackcount < (round cond)) then True -- else if count of black pieces < 0, return true
                     else False -- return false
     | (head board) == D = countBoardPieces (tail board) whitecount blackcount n -- if the piece is "D", recursively call countPieces with the rest of the board
     | (head board) == W = countBoardPieces (tail board) (whitecount + 1) blackcount n -- if the piece is "W", recursively call countPieces with the rest of the board and increment the count of white pieces
     | (head board) == B = countBoardPieces (tail board) whitecount (blackcount + 1) n -- if the piece is "B", recursively call countPieces with the rest of the board and increment the count of black pieces
---
+        where 
+            cond = (((2 * (fromIntegral n)) - 1) / 2) 
 -- sTrToBoard
 --
 -- This function consumes a list of characters which can be either 'W' or 'B'
@@ -667,7 +669,7 @@ countPieces player board counter
 -- Returns: the next best board
 --
 
-minimax :: BoardTree -> (Piece -> Board -> Int) -> Piece -> Board
+minimax :: BoardTree -> Int -> Piece -> Board
 minimax (Node _ b children) heuristic player
     | null children = b
     | otherwise =
@@ -695,9 +697,9 @@ minimax (Node _ b children) heuristic player
 --
 -- Returns: the minimax value at the top of the tree
 --
-minimax' :: BoardTree -> (Piece -> Board -> Int) -> Bool -> Piece -> Int
+minimax' :: BoardTree -> Int -> Bool -> Piece -> Int
 minimax' (Node _ b children) heuristic maxPlayer player
-    | null children = heuristic player b -- If the list of children is null, return 
+    | null children = heuristic -- If the list of children is null, return 
     | otherwise =
         let minmaxlist = if maxPlayer then maximum else minimum  -- return max/min value from list based on maxPlayer
         in minmaxlist [ (minimax' x heuristic (not maxPlayer) player) | x <- children ] -- build list of minimax values for TRUE/FALSE maxPlayer
