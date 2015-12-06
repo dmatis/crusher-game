@@ -172,16 +172,19 @@ board0 = sTrToBoard "WWW-WW-------BB-BBB"
 board1 = sTrToBoard "-WWWWW-------BB-BBB"
 boardCrush = sTrToBoard "WWW-WW--B-----B-BBB"
 board4 = sTrToBoard "WWWW-WWW---------------------BBB-BBBB"
+boards0W = createBoards state0 moves0W W
+crushBoard = "WWW-WW---B---B----B"
 state0 = getState board0 grid0
 stateCrush = getState boardCrush grid0
 state4 = getState board4 grid4
 moves0W = moveGenerator state0 slides0 jumps0 W
 moves0B = moveGenerator state0 slides0 jumps0 B
 history0W = [sTrToBoard "-WWWWW-------BB-BBB",sTrToBoard "WWW-WW-------BB-BBB"]
-history1W = ["-WWWWW-------BB-BBB","WWW-WW-------BB-BBB"]
-boards0W = createBoards state0 moves0W W
 
-crushBoard = "WWW-WW---B---B----B"
+-- History lists
+history1W = ["-WWWWW-------BB-BBB"]
+history2W = ["WWWWW---------BBBBB"]
+history3W = ["WWW-WW-------BB-BBB"]
 crushBoardHist = ["WWW--WW--B---B----B", "WWW-WW---B---B----B"]
 
 --
@@ -203,15 +206,15 @@ crushBoardHist = ["WWW--WW--B---B----B", "WWW-WW---B---B----B"]
 --
 
 crusher :: [String] -> Char -> Int -> Int -> [String]
-crusher (current:old) player d size =
-    let optimalBoard = (stateSearch board history grid slides leaps (convertCharToPiece player) d size) -- get the optimal board using stateSearcg
+crusher strhistory@(current:old) player d size =
+    let optimalBoard = (stateSearch board history grid slides leaps (convertCharToPiece player) d size)
     in ((boardToStr optimalBoard):(current:old))
         where
             grid = generateGrid size (size - 1) (2 * (size - 1)) []
             slides = generateSlides grid size
             leaps = generateLeaps grid size
             board = sTrToBoard current
-            history = map sTrToBoard old
+            history = map sTrToBoard strhistory
 
 --
 -- gameOver
@@ -323,6 +326,13 @@ boardToStr b = map (\ x -> check x) b
         check B = 'B'
         check D = '-'
 
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ==================  generateGrid FUNCTION  ========================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
 --
 -- generateGrid
 --
@@ -355,6 +365,14 @@ generateGrid n1 n2 n3 acc
             row = map (\ x -> (x,n3)) [0 .. (n1 - 1)]
             nn1 = if n2 > 0 then n1 + 1 else n1 - 1
 
+
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ==================  generateSlides FUNCTION  ======================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
 --
 -- generateSlides
 --
@@ -397,6 +415,15 @@ genSlidePointsHelper pt n
 genSlidesHelper :: Grid -> Point -> [Point] -> [Slide]
 genSlidesHelper b oldPt points = [(oldPt, newPt) | newPt <- points, newPt `elem` b]
 
+
+
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ==================  generateLeaps FUNCTION  ========================= --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
 --
 -- generateLeaps
 --
@@ -478,6 +505,14 @@ sndPt (_,j,_) = j
 thdPt :: Jump -> Point
 thdPt (_,_,j) = j
 
+
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ==================  stateSearch FUNCTION  ========================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
 --
 -- stateSearch
 --
@@ -506,6 +541,15 @@ stateSearch board history grid slides jumps player depth num
     | (gameOver board history num)                                          = board
     | ((generateNewStates board history grid slides jumps player) == [])    = board
     | otherwise                       = minimax (generateTree board history grid slides jumps player depth num) (boardEvaluator player board history num) player history num
+
+
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ==================  generateTree FUNCTION  ========================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
 --
 -- generateTree
 --
@@ -541,6 +585,14 @@ genTreeHelper board history grid slides jumps player depth n height
             childBoards = (generateNewStates board history grid slides jumps player)
             nextPlayer = if player == W then B else W
 
+
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ================  generateNewStates FUNCTION  ======================= --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
 --
 -- generateNewStates
 --
@@ -592,6 +644,14 @@ getState xs     []     = []
 getState []     ys     = []
 getState (x:xs) (y:ys) = (x, y) : getState xs ys
 
+
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ==================  moveGenerator FUNCTION  ========================= --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
 --
 -- moveGenerator
 --
@@ -774,7 +834,7 @@ minimax' (Node _ b children) heuristic maxPlayer player history n
     | otherwise =
         let minmaxlist = if maxPlayer then maximum else minimum  -- return max/min value from list based on maxPlayer
         in minmaxlist [ (minimax' x heuristic (not maxPlayer) player history n) | x <- children ] -- build list of minimax values for TRUE/FALSE maxPlayer
-
+HEAD
 
 -- Finds the index of an item in a list
 
