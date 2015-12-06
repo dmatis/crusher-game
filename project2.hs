@@ -21,6 +21,19 @@ import Debug.Trace
 -- crusher
 -- custom data types (already done)
 
+-- ///////////////////////////////////////////////////////////////////////////////////
+-- NOTE : ALL SECTIONS DONE INCLUDE A COMMENTED HEADER AS SUCH:
+
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ==================     GAMEOVER FUNCTION   ========================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
+
+
+-- //////////////////////////////////////////////////////////////////////////////////
 -- Piece is a data representation of possible pieces on a board
 -- where D is an empty spot on the board
 --       W is a piece of the White player
@@ -191,7 +204,7 @@ crushBoardHist = ["WWW--WW--B---B----B", "WWW-WW---B---B----B"]
 
 crusher :: [String] -> Char -> Int -> Int -> [String]
 crusher (current:old) player d size =
-    let optimalBoard = (stateSearch board history grid slides leaps (convertCharToPiece player) d size)
+    let optimalBoard = (stateSearch board history grid slides leaps (convertCharToPiece player) d size) -- get the optimal board using stateSearcg
     in ((boardToStr optimalBoard):(current:old))
         where
             grid = generateGrid size (size - 1) (2 * (size - 1)) []
@@ -215,18 +228,29 @@ crusher (current:old) player d size =
 --
 -- Returns: True if the board is in a state where the game has ended, otherwise False
 --
-convertCharToPiece :: Char -> Piece
-convertCharToPiece player
-  | player == 'W' = W
-  | player == 'B' = B
-  | otherwise = D
+
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ==================     GAMEOVER FUNCTION   ========================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
 
 gameOver :: Board -> [Board] -> Int -> Bool
-gameOver board history n = ( (boardSeen board (tail history))
-                          || (countBoardPieces board 0 0 n)
-                          || (lessThanHalfPieces board 0 0 n) )
+gameOver board history n = ( (boardSeen board (tail history))  -- checks if the board was previously observed
+                          || (countBoardPieces board 0 0 n) -- checks if B or W pieces total to less than n
+                          || (lessThanHalfPieces board 0 0 n) ) -- checks if B or W has less than half the pieces 
 
 
+-- convers a Char To a Piece
+convertCharToPiece :: Char -> Piece
+convertCharToPiece player
+  | player == 'W' = W -- if player is white return W
+  | player == 'B' = B -- if player is black return B
+  | otherwise = D -- else return D
+
+-- Checks to see if a board is present in history
 boardSeen :: Board -> [Board] -> Bool
 boardSeen current_board boards 
     | boards == [] = False  -- if the board is empty return false
@@ -234,6 +258,7 @@ boardSeen current_board boards
     | otherwise = boardSeen (current_board) (tail boards) -- else recursively call boardSeen with the rest of the history and the current board
 
 
+-- Checks to see if the number of either black or white pieces is less than n
 countBoardPieces :: Board -> Int -> Int -> Int -> Bool
 countBoardPieces board whitecount blackcount n
     | board == [] = if (whitecount < n) then True  -- if the board is empty and count of white pieces < 0, return true
@@ -243,6 +268,7 @@ countBoardPieces board whitecount blackcount n
     | (head board) == W = countBoardPieces (tail board) (whitecount + 1) blackcount n -- if the piece is "W", recursively call countPieces with the rest of the board and increment the count of white pieces
     | (head board) == B = countBoardPieces (tail board) whitecount (blackcount + 1) n -- if the piece is "B", recursively call countPieces with the rest of the board and increment the count of black pieces
 
+-- checks to see if either black or white pieces are less than half the initial amount
 lessThanHalfPieces :: Board -> Int -> Int -> Int -> Bool
 lessThanHalfPieces board whitecount blackcount n
     | board == [] = if (whitecount < (round cond)) then True  -- if the board is empty and count of white pieces < 0, return true
@@ -642,34 +668,46 @@ matchesPiece p state point = True `elem` [True | tile <- state, (snd tile) == po
 
 -- Goodness value determined by: The difference between black/white pieces on the board
 
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ==================     BOARDEVALUATOR   ============================= --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
+
 boardEvaluator :: Piece -> Board -> [Board] -> Int -> Int
 boardEvaluator player board history n
-    | (gameOver board history n) == True = getFinalScore (whoWon (countPlayerPieces player board 0) player) player
-    | otherwise = countPlayerPieces player board 0
+    | (gameOver board history n) == True = getFinalScore (whoWon (countPlayerPieces player board 0) player) player -- if its gameOver, get the Final Score for the player
+    | otherwise = countPlayerPieces player board 0 -- else return the heuristic calculation
 
+-- Checks who won based on wheather the result of countPlayerPieces is less than 0 or greater than 0
 whoWon :: Int -> Piece -> Piece
 whoWon num player
-    | (num < 0) = (getOtherPlayer player)
-    | (num > 0) = player
+    | (num < 0) = (getOtherPlayer player) -- if its less than 0, return opponent
+    | (num > 0) = player -- else return the player
 
+-- Gets the opponents Piece depending on the players piece
 getOtherPlayer :: Piece -> Piece
 getOtherPlayer player
-    | player == B = W
-    | otherwise = B
+    | player == B = W -- if the player is B return W
+    | otherwise = B -- if the player is W return B
 
+-- Outputs 10 if the player won or -10 if the player lost
 getFinalScore :: Piece -> Piece -> Int
 getFinalScore winner player
-    | winner == player = 10
-    | otherwise = (-10)
+    | winner == player = 10 -- if the player is the winner, return 10
+    | otherwise = (-10) -- if the player is not the winner, return -10
   
 
--- Count the pieces on the board and return the difference in black/white pieces
+-- Count the pieces on the board and return the difference in black/white pieces from the perspective of the player
 countPlayerPieces :: Piece -> Board -> Int  -> Int
 countPlayerPieces player board counter
-    | player == B = (countPieces B board 0) - (countPieces W board 0)
-    | otherwise     = (countPieces W board 0) - (countPieces B board 0)
+    | player == B = (countPieces B board 0) - (countPieces W board 0) -- if player is B, return B - W pieces
+    | otherwise     = (countPieces W board 0) - (countPieces B board 0) -- if player is W, return B - W pieces
 
 
+-- Counts the number of pieces for a player on the board
 countPieces :: Piece -> Board -> Int -> Int
 countPieces player board counter 
   | (null board)           = counter     
@@ -693,6 +731,13 @@ countPieces player board counter
 --
 -- Returns: the next best board
 --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ==================     MINIMAX             ========================== --
+-- ===================================================================== --
+-- ===================================================================== --
+-- ===================================================================== --
 
 minimax :: BoardTree -> Int -> Piece -> [Board] -> Int ->Board
 minimax (Node _ b children) heuristic player history n
@@ -722,9 +767,10 @@ minimax (Node _ b children) heuristic player history n
 --
 -- Returns: the minimax value at the top of the tree
 --
+-- 
 minimax' :: BoardTree -> Int -> Bool -> Piece -> [Board] -> Int -> Int
 minimax' (Node _ b children) heuristic maxPlayer player history n
-    | null children = (boardEvaluator player b history n) -- If the list of children is null, return 
+    | null children = (boardEvaluator player b history n) -- If the list of children is null, return the boardevaluator result of the variables
     | otherwise =
         let minmaxlist = if maxPlayer then maximum else minimum  -- return max/min value from list based on maxPlayer
         in minmaxlist [ (minimax' x heuristic (not maxPlayer) player history n) | x <- children ] -- build list of minimax values for TRUE/FALSE maxPlayer
