@@ -1,39 +1,23 @@
--- CPSC 312 - Project 2
--- 
 import Debug.Trace
--- Name: Darren Matis
--- Student Number: 94897071
--- ugrad ID: f3w8
-
--- Name: Abrar Musa
--- Student Number: 48915086
--- ugrad ID: i1u9a
-
--- Name: Cunn Yong Goh
--- Student Number: 58362138
--- ugrad ID: f8f9
-
--- Main Components:
--- minimax algorithm
--- a board evaluator
--- state search
--- movement generators (and by extension, tree generator, new state generator)
--- crusher
--- custom data types (already done)
-
 -- ///////////////////////////////////////////////////////////////////////////////////
--- NOTE : ALL SECTIONS DONE INCLUDE A COMMENTED HEADER AS SUCH:
 
 -- ===================================================================== --
 -- ===================================================================== --
 -- ===================================================================== --
--- ==================     GAMEOVER FUNCTION   ========================== --
+-- ======================== CRUSHER GAME =============================== --
 -- ===================================================================== --
 -- ===================================================================== --
 -- ===================================================================== --
-
 
 -- //////////////////////////////////////////////////////////////////////////////////
+
+-- 12/15/2015
+-- Developed for the project requirements of CS312 (Functional Programming) at UBC
+-- By Darren Matis, Abrar Musa, Jun Goh
+-- Based upon the work of Khurram Ali
+
+-- //////////////////////////////////////////////////////////////////////////////////
+
 -- Piece is a data representation of possible pieces on a board
 -- where D is an empty spot on the board
 --       W is a piece of the White player
@@ -246,7 +230,7 @@ gameOver board history n = ( (boardSeen board (tail history))  -- checks if the 
                           || (lessThanHalfPieces board 0 0 n) ) -- checks if B or W has less than half the pieces 
 
 
--- convers a Char To a Piece
+-- converts a Char To a Piece
 convertCharToPiece :: Char -> Piece
 convertCharToPiece player
   | player == 'W' = W -- if player is white return W
