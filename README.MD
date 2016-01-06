@@ -5,15 +5,14 @@ A Peg-based Board Game that utilizes a minmax search algorithm
 ## Start Here
 
 1. Begin by running the crusher haskell file (ie. "ghci crusher.hs" in the terminal window)
-2. Type 'play history0 W 3 3' as an example
 
 ## To Play
 
 1. Type 'play history player depth num' where:
-* history : a list of boards of previous game states
-* player : (W) White or (B) Black
-* depth : How deep the minmax algorithm should search for optimal game states
-* n : dimension size of the board
+  * history : a list of boards of previous game states
+  * player : (W) White or (B) Black
+  * depth : How deep the minmax algorithm should search for optimal game states
+  * n : dimension size of the board
 
 ex. 'play history3W 'W' 3 3'
 Will execute a game in the terminal window
